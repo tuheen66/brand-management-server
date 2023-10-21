@@ -1,7 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 require('dotenv').config()
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const app = express();
 const port = process.env.PORT || 5000;
 
@@ -31,11 +31,34 @@ async function run() {
 
         const carCollection = client.db('carDB').collection('cars')
 
+        const cartCollection = client.db('cartDB').collection('cart')
+
+        app.get('/products/cart', async (req, res) => {
+            const cursor = cartCollection.find();
+            const result = await cursor.toArray();
+            res.send(result)
+        })
+
+
+        app.post('/products/cart', async (req, res) => {
+            const cart = req.body;
+            console.log('cart item ', cart)
+            const result = await cartCollection.insertOne(cart);
+            res.send(result)
+
+        })
 
         app.get('/products', async (req, res) => {
             const cursor = carCollection.find();
             const result = await cursor.toArray();
             res.send(result);
+        })
+
+        app.get('/products/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: new ObjectId(id) }
+            const result = await carCollection.findOne(query)
+            res.send(result)
         })
 
 
@@ -46,9 +69,27 @@ async function run() {
             res.send(result)
         })
 
+        app.put('/products/:id', async (req, res) => {
+            const id = req.params.id;
+            const filter = { _id: new ObjectId(id) }
+            const option = { upsert: true }
+            const updatedProduct = req.body
+            const product = {
+                $set: {
+                    image: updatedProduct.image,
+                    name: updatedProduct.name,
+                    brandName: updatedProduct.brandName,
+                    type: updatedProduct.type,
+                    price: updatedProduct.price,
+                    shortDes: updatedProduct.shortDes,
+                    rating: updatedProduct.rating
+                }
+            }
 
+            const result = await carCollection.updateOne(filter, product, option)
+            res.send(result)
 
-
+        })
 
 
         // Send a ping to confirm a successful connection
