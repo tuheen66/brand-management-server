@@ -45,6 +45,14 @@ async function run() {
             console.log('cart item ', cart)
             const result = await cartCollection.insertOne(cart);
             res.send(result)
+        })
+
+        app.delete('/products/cart/:id', async (req, res) => {
+            const id = req.params.id
+            console.log(id)
+            const query = { _id: new ObjectId(id) }
+            const result = await cartCollection.deleteOne(query)
+            res.send(result)
 
         })
 
